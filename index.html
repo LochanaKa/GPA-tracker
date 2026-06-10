@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#0b0f19]">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BScHons Data Science - Academic Tracker & Forecaster</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+        <link rel="shortcut icon" href="logo.png" type="image/x-icon">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        darkBase: '#0b0f19',
+                        darkSurface: '#161e2e',
+                        darkBorder: '#243242',
+                        dsNeonCyan: '#00f2fe',
+                        dsNeonBlue: '#4facfe',
+                        dsPurple: '#7f5af0',
+                        dsTextMuted: '#94a3b8',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #243242;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4facfe;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+                color: black !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col selection:bg-dsNeonBlue/30 selection:text-white">
+
+    <header
+        class="border-b border-darkBorder bg-darkSurface px-6 py-4 flex items-center justify-between no-print sticky top-0 z-50">
+       <div class="flex items-center space-x-3">
+            <div class="h-9 w-9 bg-gradient-to-br from-dsNeonBlue to-dsPurple rounded-lg flex items-center justify-center font-mono font-bold text-darkBase text-lg shadow-lg shadow-dsNeonBlue/20">LK</div>
+            <div>
+            <div>
+                <h1 class="text-2xl font-bold text-white tracking-tight">Academic Tracker</h1>
+                <p class="text-xs text-dsNeonBlue font-medium uppercase tracking-widest">BSc(Hons) Data Science</p>
+            </div>
+        </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <div id="autosave-indicator"
+                class="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded hidden animate-pulse">
+                ✓ Auto-Synced
+            </div>
+            <div class="flex space-x-1.5">
+                <button onclick="app.exportData()"
+                    class="px-3 py-1.5 bg-darkBase border border-darkBorder hover:border-dsNeonBlue text-slate-300 text-xs font-mono rounded transition-all">
+                    Backup JSON
+                </button>
+                <button onclick="document.getElementById('file-upload').click()"
+                    class="px-3 py-1.5 bg-darkBase border border-darkBorder hover:border-dsPurple text-slate-300 text-xs font-mono rounded transition-all">
+                    Restore
+                </button>
+                <input type="file" id="file-upload" class="hidden" accept=".json" onchange="app.importData(event)">
+                <button onclick="window.print()"
+                    class="px-3 py-1.5 bg-darkBorder hover:bg-slate-700 text-xs text-white font-mono rounded transition-all">
+                    Print Report
+                </button>
+                <button onclick="app.resetToDefaults()"
+                    class="px-3 py-1.5 border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded text-xs font-mono transition-all">
+                    Reset Matrix
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1700px] w-full mx-auto">
+
+        <section class="lg:col-span-4 space-y-6 flex flex-col">
+
+            <div class="bg-darkSurface border border-darkBorder rounded-xl p-5 shadow-xl relative overflow-hidden">
+                <h2 class="text-xs uppercase tracking-wider text-dsTextMuted font-mono font-bold mb-4">// System
+                    Graduation Metrics</h2>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-darkBase/60 border border-darkBorder p-4 rounded-lg">
+                        <span class="text-xs text-dsTextMuted block font-mono">CURRENT CGPA</span>
+                        <div id="metric-cgpa"
+                            class="text-4xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-dsNeonCyan to-dsNeonBlue mt-1">
+                            0.00</div>
+                        <span id="metric-classification"
+                            class="text-[10px] uppercase font-mono tracking-wider px-2 py-0.5 rounded bg-dsNeonBlue/10 text-dsNeonBlue mt-2.5 inline-block border border-dsNeonBlue/20">Awaiting
+                            Data</span>
+                    </div>
+                    <div class="bg-darkBase/60 border border-darkBorder p-4 rounded-lg">
+                        <span class="text-xs text-dsTextMuted block font-mono">GPA CREDITS EARNED</span>
+                        <div id="metric-credits" class="text-3xl font-bold font-mono text-slate-200 mt-1">0 / 120</div>
+                        <span class="text-[10px] font-mono text-dsPurple font-semibold mt-2 block">Handbook Target
+                            Met</span>
+                    </div>
+                </div>
+
+                <div class="mt-5 space-y-2">
+                    <div class="flex justify-between text-xs font-mono">
+                        <span class="text-dsTextMuted">Curriculum Velocity Progress</span>
+                        <span id="progress-text-pct" class="text-dsNeonCyan font-bold">0%</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-darkBase rounded-full overflow-hidden border border-darkBorder">
+                        <div id="progress-bar-fill"
+                            class="h-full bg-gradient-to-r from-dsNeonBlue to-dsPurple transition-all duration-500"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-darkSurface border border-darkBorder rounded-xl p-5 shadow-xl space-y-3">
+                <h2 class="text-xs uppercase tracking-wider text-dsTextMuted font-mono font-bold mb-1">// Academic Year
+                    Milestones (2 Semesters = 1 Year)</h2>
+
+                <div class="grid grid-cols-2 gap-3" id="yearly-milestone-grid">
+                    <div class="bg-darkBase/40 border border-darkBorder p-3 rounded-lg flex flex-col justify-between">
+                        <div class="text-xs font-bold text-slate-300 font-mono">Year 1 (S1/S2)</div>
+                        <div class="flex justify-between items-baseline mt-2">
+                            <span class="text-[10px] text-dsTextMuted font-mono">GPA:</span>
+                            <span id="y1-gpa" class="font-mono text-sm font-semibold text-dsNeonCyan">0.00</span>
+                        </div>
+                        <div class="text-[10px] text-dsTextMuted font-mono mt-0.5">Credits: <span id="y1-cr"
+                                class="text-white">0/29</span></div>
+                    </div>
+                    <div class="bg-darkBase/40 border border-darkBorder p-3 rounded-lg flex flex-col justify-between">
+                        <div class="text-xs font-bold text-slate-300 font-mono">Year 2 (S3/S4)</div>
+                        <div class="flex justify-between items-baseline mt-2">
+                            <span class="text-[10px] text-dsTextMuted font-mono">GPA:</span>
+                            <span id="y2-gpa" class="font-mono text-sm font-semibold text-dsNeonCyan">0.00</span>
+                        </div>
+                        <div class="text-[10px] text-dsTextMuted font-mono mt-0.5">Credits: <span id="y2-cr"
+                                class="text-white">0/32</span></div>
+                    </div>
+                    <div class="bg-darkBase/40 border border-darkBorder p-3 rounded-lg flex flex-col justify-between">
+                        <div class="text-xs font-bold text-slate-300 font-mono">Year 3 (S5/S6)</div>
+                        <div class="flex justify-between items-baseline mt-2">
+                            <span class="text-[10px] text-dsTextMuted font-mono">GPA:</span>
+                            <span id="y3-gpa" class="font-mono text-sm font-semibold text-dsNeonCyan">0.00</span>
+                        </div>
+                        <div class="text-[10px] text-dsTextMuted font-mono mt-0.5">Credits: <span id="y3-cr"
+                                class="text-white">0/29</span></div>
+                    </div>
+                    <div class="bg-darkBase/40 border border-darkBorder p-3 rounded-lg flex flex-col justify-between">
+                        <div class="text-xs font-bold text-slate-300 font-mono">Year 4 (S7/S8)</div>
+                        <div class="flex justify-between items-baseline mt-2">
+                            <span class="text-[10px] text-dsTextMuted font-mono">GPA:</span>
+                            <span id="y4-gpa" class="font-mono text-sm font-semibold text-dsNeonCyan">0.00</span>
+                        </div>
+                        <div class="text-[10px] text-dsTextMuted font-mono mt-0.5">Credits: <span id="y4-cr"
+                                class="text-white">0/30</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="bg-darkSurface border border-darkBorder rounded-xl p-5 shadow-xl flex-1 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-xs uppercase tracking-wider text-dsTextMuted font-mono font-bold mb-3">//
+                        Target-Driven Back-Calculator</h2>
+
+                    <p class="text-xs text-dsTextMuted mb-4 leading-relaxed">
+                        Select your desired graduation class or target final CGPA. The system reads your existing graded
+                        modules and evaluates exactly what average you must sustain across all remaining credits.
+                    </p>
+
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        <button onclick="app.setTargetPreset(3.70)"
+                            class="py-1.5 bg-darkBase border border-darkBorder hover:border-dsNeonCyan rounded text-[11px] font-mono font-semibold text-dsNeonCyan transition-all">
+                            1st Class (3.70)
+                        </button>
+                        <button onclick="app.setTargetPreset(3.30)"
+                            class="py-1.5 bg-darkBase border border-darkBorder hover:border-dsNeonBlue rounded text-[11px] font-mono font-semibold text-dsNeonBlue transition-all">
+                            2nd Upper (3.30)
+                        </button>
+                        <button onclick="app.setTargetPreset(3.00)"
+                            class="py-1.5 bg-darkBase border border-darkBorder hover:border-dsPurple rounded text-[11px] font-mono font-semibold text-dsPurple transition-all">
+                            2nd Lower (3.00)
+                        </button>
+                    </div>
+
+                    <div class="space-y-2 pt-2 border-t border-darkBorder/50">
+                        <div class="flex justify-between text-xs font-mono">
+                            <span class="text-slate-300">Custom Target CGPA</span>
+                            <span id="slider-target-val" class="font-bold text-dsNeonCyan">3.50</span>
+                        </div>
+                        <input id="slider-target-gpa" type="range" min="2.00" max="4.00" step="0.05" value="3.50"
+                            class="w-full accent-dsNeonCyan bg-darkBase rounded-lg appearance-none h-1.5 cursor-pointer">
+                    </div>
+                </div>
+
+                <div class="mt-6 p-4 rounded-lg bg-darkBase border border-darkBorder space-y-3">
+                    <div class="flex justify-between items-center text-xs font-mono">
+                        <span class="text-dsTextMuted">Remaining GPA Credits:</span>
+                        <span id="calc-remaining-credits" class="text-white font-bold">0</span>
+                    </div>
+
+                    <div class="border-t border-darkBorder/40 pt-2">
+                        <span class="text-[10px] text-dsTextMuted block font-mono uppercase tracking-wider">Required
+                            Future Average:</span>
+                        <div class="flex items-center justify-between mt-1">
+                            <div id="calc-required-gpa" class="text-3xl font-mono font-bold text-white">---</div>
+                            <span id="calc-status-badge"
+                                class="text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold">Awaiting
+                                Data</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="lg:col-span-8 space-y-6 flex flex-col">
+
+            <div class="bg-darkSurface border border-darkBorder rounded-xl p-5 shadow-xl">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-xs uppercase tracking-wider text-dsTextMuted font-mono font-bold">// Longitudinal
+                        Tracking Timeline (SGPA vs CGPA Combo View)</h2>
+                    <span
+                        class="text-[11px] text-dsNeonCyan font-mono border border-dsNeonCyan/20 bg-dsNeonCyan/5 px-2 py-0.5 rounded">Interactive
+                        Nodes Active</span>
+                </div>
+                <div class="h-[210px] w-full relative">
+                    <canvas id="velocityChart"></canvas>
+                </div>
+            </div>
+
+            <div
+                class="bg-darkSurface border border-darkBorder rounded-xl shadow-xl flex-1 flex flex-col overflow-hidden">
+                <div
+                    class="p-4 border-b border-darkBorder flex flex-wrap justify-between items-center gap-3 bg-darkSurface">
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-sm font-semibold tracking-wide">Interactive Curricular Matrix</h2>
+                        <div id="elective-warning-badge" class="hidden text-xs font-mono px-2.5 py-0.5 rounded border">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <select id="filter-academic-year" onchange="app.handleYearFilterChange(this.value)"
+                            class="bg-darkBase border border-darkBorder rounded px-2.5 py-1 text-xs font-mono text-slate-200 focus:border-dsNeonCyan outline-none">
+                            <option value="ALL">All Academic Years</option>
+                            <option value="1">Year 1 (Semesters 1-2)</option>
+                            <option value="2">Year 2 (Semesters 3-4)</option>
+                            <option value="3">Year 3 (Semesters 5-6)</option>
+                            <option value="4">Year 4 (Semesters 7-8)</option>
+                        </select>
+                        <select id="filter-semester" onchange="app.handleSemesterFilterChange(this.value)"
+                            class="bg-darkBase border border-darkBorder rounded px-2.5 py-1 text-xs font-mono text-slate-200 focus:border-dsNeonCyan outline-none">
+                            <option value="ALL">All Semesters</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                        <button onclick="app.openAddModal()"
+                            class="px-3 py-1 bg-gradient-to-r from-dsNeonBlue to-dsNeonCyan hover:opacity-90 text-darkBase font-bold rounded text-xs font-mono shadow-md">
+                            + Custom Course
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-x-auto min-h-[380px]">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr
+                                class="bg-darkBase/70 border-b border-darkBorder text-[11px] font-mono tracking-wider text-dsTextMuted uppercase select-none">
+                                <th class="p-3.5 w-32">Classification Type</th>
+                                <th class="p-3.5 w-24">Code</th>
+                                <th class="p-3.5">Course Title Spec</th>
+                                <th class="p-3.5 w-24 text-center">Semester</th>
+                                <th class="p-3.5 w-20 text-center">Credits</th>
+                                <th class="p-3.5 w-32 text-center">Assigned Grade</th>
+                                <th class="p-3.5 w-16 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="course-ledger-rows" class="divide-y divide-darkBorder/40 font-sans text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="course-modal"
+        class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 hidden backdrop-blur-xs">
+        <div class="bg-darkSurface border border-darkBorder rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-darkBorder pb-3 mb-4">
+                <h3 id="modal-title" class="text-sm font-bold font-mono tracking-wide text-white">// CONFIGURATION
+                    WIZARD</h3>
+                <button onclick="app.closeModal()"
+                    class="text-dsTextMuted hover:text-white font-mono text-lg">&times;</button>
+            </div>
+            <form id="course-form" onsubmit="app.handleFormSubmit(event)" class="space-y-4 text-xs font-mono">
+                <input type="hidden" id="form-course-id">
+                <div><label class="block text-dsTextMuted mb-1">Course Code Identifier</label><input type="text"
+                        id="form-code" required
+                        class="w-full bg-darkBase border border-darkBorder rounded p-2 text-white font-mono uppercase">
+                </div>
+                <div><label class="block text-dsTextMuted mb-1">Official Course Title</label><input type="text"
+                        id="form-title" required
+                        class="w-full bg-darkBase border border-darkBorder rounded p-2 text-white"></div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div><label class="block text-dsTextMuted mb-1">Semester</label><select id="form-semester"
+                            class="w-full bg-darkBase border border-darkBorder rounded p-2 text-white">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                        </select></div>
+                    <div><label class="block text-dsTextMuted mb-1">Credits</label><input type="number"
+                            id="form-credits" min="0" max="8" value="2" required
+                            class="w-full bg-darkBase border border-darkBorder rounded p-2 text-white"></div>
+                    <div><label class="block text-dsTextMuted mb-1">Type Allocation</label><select id="form-type"
+                            class="w-full bg-darkBase border border-darkBorder rounded p-2 text-white">
+                            <option value="Compulsory">Compulsory</option>
+                            <option value="Elective">Elective</option>
+                            <option value="Non-GPA">Non-GPA</option>
+                        </select></div>
+                </div>
+                <div>
+                    <label class="block text-dsTextMuted mb-1">Grade Outcome State</label>
+                    <select id="form-grade" class="w-full bg-darkBase border border-darkBorder rounded p-2 text-white">
+                        <option value="A+">A+ (4.00)</option>
+                        <option value="A">A (4.00)</option>
+                        <option value="A-">A- (3.70)</option>
+                        <option value="B+">B+ (3.30)</option>
+                        <option value="B">B (3.00)</option>
+                        <option value="B-">B- (2.70)</option>
+                        <option value="C+">C+ (2.30)</option>
+                        <option value="C">C (2.00)</option>
+                        <option value="C-">C- (1.70)</option>
+                        <option value="D+">D+ (1.30)</option>
+                        <option value="D">D (1.00)</option>
+                        <option value="E">E (0.00)</option>
+                        <option value="IP">IP (In Progress)</option>
+                    </select>
+                </div>
+                <div class="flex justify-end pt-2 space-x-2">
+                    <button type="button" onclick="app.closeModal()"
+                        class="px-4 py-2 bg-darkBorder text-slate-300 rounded">Cancel</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-gradient-to-r from-dsNeonBlue to-dsNeonCyan text-darkBase font-bold rounded">Commit
+                        to Ledger</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const GRADE_POLICY = { 'A+': 4.00, 'A': 4.00, 'A-': 3.70, 'B+': 3.30, 'B': 3.00, 'B-': 2.70, 'C+': 2.30, 'C': 2.00, 'C-': 1.70, 'D+': 1.30, 'D': 1.00, 'E': 0.00, 'IP': null };
+
+        // Comprehensive 4-Year Handbook Baseline Array Matrix
+        const BASELINE_CURRICULUM_DATA = [
+            // Year 1 - Semester I (Total Target: 14 Credits)
+            { id: "ds-1101", code: "DS1101", title: "Introduction to Data Science", semester: 1, year: 1, credits: 1, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-1102", code: "DS1102", title: "Programming Fundamentals", semester: 1, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-1103", code: "DS1103", title: "Calculus", semester: 1, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-1104", code: "DS1104", title: "Introduction to Statistics", semester: 1, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-1105", code: "DS1105", title: "Database Management Systems", semester: 1, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-1106", code: "DS1106", title: "Computer System Organization", semester: 1, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-1107", code: "DS1107", title: "Data and Society", semester: 1, year: 1, credits: 1, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-1108", code: "DS1108", title: "Web Programming I", semester: 1, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-1109", code: "DS1109", title: "Communication Skills I", semester: 1, year: 1, credits: 0, type: "Non-GPA", selected: true, grade: "IP" },
+            { id: "ds-1110", code: "DS1110", title: "Academic Integrity", semester: 1, year: 1, credits: 0, type: "Non-GPA", selected: true, grade: "IP" },
+            { id: "ds-egp-1101", code: "DS-EGP-1101", title: "General English I", semester: 1, year: 1, credits: 0, type: "Non-GPA", selected: true, grade: "IP" },
+
+            // Year 1 - Semester II (Total Target: 15 Credits)
+            { id: "ds-2101", code: "DS2101", title: "Operating Systems", semester: 2, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-2102", code: "DS2102", title: "Data Structures", semester: 2, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-2103", code: "DS2103", title: "Linear Algebra", semester: 2, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-2104", code: "DS2104", title: "Object Oriented Programming", semester: 2, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-2105", code: "DS2105", title: "Capstone Project in Data Science I", semester: 2, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-2106", code: "DS2106", title: "Analysis of Algorithms", semester: 2, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-2107", code: "DS2107", title: "System Analysis and Design", semester: 2, year: 1, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-2108", code: "DS2108", title: "Data Pre-Processing", semester: 2, year: 1, credits: 1, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-2109", code: "DS2109", title: "Communication Skills II", semester: 2, year: 1, credits: 0, type: "Non-GPA", selected: true, grade: "IP" },
+            { id: "ds-egp-1201", code: "DS-EGP-1201", title: "General English II", semester: 2, year: 1, credits: 0, type: "Non-GPA", selected: true, grade: "IP" },
+
+            // Year 2 - Semester III (Total Target: 13 Credits)
+            { id: "ds-3101", code: "DS3101", title: "Probability Theory", semester: 3, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-3102", code: "DS3102", title: "Regression Analysis", semester: 3, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-3103", code: "DS3103", title: "Multivariate Calculus", semester: 3, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-3104", code: "DS3104", title: "Real World Analytics", semester: 3, year: 2, credits: 1, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-3105", code: "DS3105", title: "Computer Networking", semester: 3, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-3106", code: "DS3106", title: "Data Warehousing", semester: 3, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-3107", code: "DS3107", title: "Web Programming II", semester: 3, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-eap-2101", code: "DS-EAP-2101", title: "Academic English I", semester: 3, year: 2, credits: 0, type: "Non-GPA", selected: true, grade: "IP" },
+
+            // Year 2 - Semester IV (Total Target: 19 Credits)
+            { id: "ds-4101", code: "DS4101", title: "Advanced Database Management Systems", semester: 4, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-4102", code: "DS4102", title: "Scientific Writing & Documentation", semester: 4, year: 2, credits: 1, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-4103", code: "DS4103", title: "Software Engineering", semester: 4, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-4104", code: "DS4104", title: "Data Visualization", semester: 4, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-4105", code: "DS4105", title: "Capstone Project in Data Science II", semester: 4, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-4106", code: "DS4106", title: "Applied Data Mining", semester: 4, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-4107", code: "DS4107", title: "Social and Professional Issues in Computing", semester: 4, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-4108", code: "DS4108", title: "Business Intelligence", semester: 4, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-4109", code: "DS4109", title: "Discrete Mathematics", semester: 4, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-4110", code: "DS4110", title: "Artificial Intelligence", semester: 4, year: 2, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-eap-2201", code: "DS-EAP-2201", title: "Academic English II", semester: 4, year: 2, credits: 0, type: "Non-GPA", selected: true, grade: "IP" },
+
+            // Year 3 - Semester V (Total Target: 12 Compulsory + 4 Elective = 16 Credits)
+            { id: "ds-5101", code: "DS5101", title: "Semantic Web", semester: 5, year: 3, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-5102", code: "DS5102", title: "Time Series Analysis and Forecasting", semester: 5, year: 3, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-ebp-3101", code: "DS-EBP-3101", title: "Information Security", semester: 5, year: 3, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-5103", code: "DS5103", title: "Machine Learning", semester: 5, year: 3, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-5104", code: "DS5104", title: "Linear Programming", semester: 5, year: 3, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-5105", code: "DS5105", title: "Graph Theory", semester: 5, year: 3, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-5106", code: "DS5106", title: "Business English", semester: 5, year: 3, credits: 0, type: "Non-GPA", selected: true, grade: "IP" },
+            // Electives
+            { id: "ds-5107", code: "DS5107", title: "Image Processing", semester: 5, year: 3, credits: 2, type: "Elective", selected: true, grade: "IP" },
+            { id: "ds-5108", code: "DS5108", title: "Mobile Computing", semester: 5, year: 3, credits: 2, type: "Elective", selected: true, grade: "IP" },
+            { id: "ds-5109", code: "DS5109", title: "Data Science for Bioinformatics", semester: 5, year: 3, credits: 2, type: "Elective", selected: false, grade: "IP" },
+            { id: "ds-5110", code: "DS5110", title: "Human Resource Management", semester: 5, year: 3, credits: 2, type: "Elective", selected: false, grade: "IP" },
+            { id: "ds-5111", code: "DS5111", title: "Parallel and Distributed Computing", semester: 5, year: 3, credits: 2, type: "Elective", selected: false, grade: "IP" },
+
+            // Year 3 - Semester VI (Total Target: 11 Compulsory + 2 Elective = 13 Credits)
+            { id: "ds-6101", code: "DS6101", title: "Introduction to Deep Learning", semester: 6, year: 3, credits: 1, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-6102", code: "DS6102", title: "Bayesian Learning and Graphical Models", semester: 6, year: 3, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-6103", code: "DS6103", title: "Mathematical Optimization", semester: 6, year: 3, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-6104", code: "DS6104", title: "Industrial Training", semester: 6, year: 3, credits: 6, type: "Compulsory", selected: true, grade: "IP" },
+            // Electives
+            { id: "ds-6105", code: "DS6105", title: "Web Services", semester: 6, year: 3, credits: 2, type: "Elective", selected: true, grade: "IP" },
+            { id: "ds-6106", code: "DS6106", title: "Cloud Computing", semester: 6, year: 3, credits: 2, type: "Elective", selected: false, grade: "IP" },
+            { id: "ds-6107", code: "DS6107", title: "Business Process Management", semester: 6, year: 3, credits: 2, type: "Elective", selected: false, grade: "IP" },
+            { id: "ds-6108", code: "DS6108", title: "Software Quality Assurance", semester: 6, year: 3, credits: 2, type: "Elective", selected: false, grade: "IP" },
+            { id: "ds-6109", code: "DS6109", title: "Fraud and Anomaly Detection", semester: 6, year: 3, credits: 2, type: "Elective", selected: false, grade: "IP" },
+
+            // Year 4 - Semester VII (Total Target: 9 Compulsory + 4 Elective = 13 Credits)
+            { id: "ds-7101", code: "DS7101", title: "Research Method", semester: 7, year: 4, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-7102", code: "DS7102", title: "Advanced Deep Learning", semester: 7, year: 4, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-7103", code: "DS7103", title: "Emerging Trends in Data Science", semester: 7, year: 4, credits: 1, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-7104", code: "DS7104", title: "Numerical Methods", semester: 7, year: 4, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-7105", code: "DS7105", title: "Natural Language Processing", semester: 7, year: 4, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            // Electives
+            { id: "ds-7106", code: "DS7106", title: "Entrepreneurship and Innovation", semester: 7, year: 4, credits: 2, type: "Elective", selected: true, grade: "IP" },
+            { id: "ds-7107", code: "DS7107", title: "Internet of Things", semester: 7, year: 4, credits: 2, type: "Elective", selected: true, grade: "IP" },
+            { id: "ds-7108", code: "DS7108", title: "Design Patterns and Anti-patterns", semester: 7, year: 4, credits: 2, type: "Elective", selected: false, grade: "IP" },
+            { id: "ds-7109", code: "DS7109", title: "Ontology Engineering", semester: 7, year: 4, credits: 2, type: "Elective", selected: false, grade: "IP" },
+            { id: "ds-7110", code: "DS7110", title: "Blockchain and Cryptocurrency", semester: 7, year: 4, credits: 2, type: "Elective", selected: false, grade: "IP" },
+
+            // Year 4 - Semester VIII (Total Target: 15 Compulsory + 2 Elective = 17 Credits)
+            { id: "ds-8101", code: "DS8101", title: "Research Project in Data Science", semester: 8, year: 4, credits: 8, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-8102", code: "DS8102", title: "Information Retrieval and Web Analytics", semester: 8, year: 4, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-8103", code: "DS8103", title: "Reinforcement Learning", semester: 8, year: 4, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-8104", code: "DS8104", title: "Computational Intelligence", semester: 8, year: 4, credits: 2, type: "Compulsory", selected: true, grade: "IP" },
+            { id: "ds-8105", code: "DS8105", title: "Business Analytics and Applications", semester: 8, year: 4, credits: 1, type: "Compulsory", selected: true, grade: "IP" },
+            // Electives
+            { id: "ds-8106", code: "DS8106", title: "Geographical Information Systems", semester: 8, year: 4, credits: 2, type: "Elective", selected: true, grade: "IP" },
+            { id: "ds-8107", code: "DS8107", title: "Digital Forensics", semester: 8, year: 4, credits: 2, type: "Elective", selected: false, grade: "IP" },
+            { id: "ds-8108", code: "DS8108", title: "Business Process Simulation", semester: 8, year: 4, credits: 2, type: "Elective", selected: false, grade: "IP" },
+            { id: "ds-8109", code: "DS8109", title: "Robotics", semester: 8, year: 4, credits: 2, type: "Elective", selected: false, grade: "IP" }
+        ];
+
+        const ELECTIVE_BUDGETS = { 5: 4, 6: 2, 7: 4, 8: 2 };
+
+        class DataScienceApp {
+            constructor() {
+                this.courses = [];
+                this.storageKey = 'ds_matrix_ledger_v5';
+                this.initElements();
+                this.bindEvents();
+            }
+
+            initElements() {
+                this.ledgerContainer = document.getElementById('course-ledger-rows');
+                this.modal = document.getElementById('course-modal');
+                this.form = document.getElementById('course-form');
+                this.sliderTargetGpa = document.getElementById('slider-target-gpa');
+                this.sliderTargetVal = document.getElementById('slider-target-val');
+                this.autosaveIndicator = document.getElementById('autosave-indicator');
+                this.electiveBadge = document.getElementById('elective-warning-badge');
+            }
+
+            bindEvents() {
+                this.sliderTargetGpa.addEventListener('input', (e) => {
+                    this.sliderTargetVal.innerText = parseFloat(e.target.value).toFixed(2);
+                    this.runPredictiveSimulation();
+                });
+            }
+
+            boot() {
+                const persisted = localStorage.getItem(this.storageKey);
+                if (persisted) {
+                    try { this.courses = JSON.parse(persisted); }
+                    catch (e) { this.courses = JSON.parse(JSON.stringify(BASELINE_CURRICULUM_DATA)); }
+                } else { this.courses = JSON.parse(JSON.stringify(BASELINE_CURRICULUM_DATA)); }
+
+                this.initChart();
+                this.recalculateAllMetrics();
+                this.renderGrid();
+            }
+
+            handleYearFilterChange(yearVal) {
+                const semSelect = document.getElementById('filter-semester');
+                if (yearVal !== 'ALL') semSelect.value = 'ALL';
+                this.renderGrid();
+            }
+
+            handleSemesterFilterChange(semVal) {
+                const yearSelect = document.getElementById('filter-academic-year');
+                if (semVal !== 'ALL') yearSelect.value = 'ALL';
+                this.renderGrid();
+            }
+
+            validateElectiveQuotas() {
+                const currentSem = document.getElementById('filter-semester').value;
+                if (currentSem !== 'ALL' && ELECTIVE_BUDGETS[currentSem] !== undefined) {
+                    const target = ELECTIVE_BUDGETS[currentSem];
+                    const selectedCount = this.courses
+                        .filter(c => c.semester.toString() === currentSem && c.type === 'Elective' && c.selected)
+                        .reduce((sum, c) => sum + c.credits, 0);
+
+                    this.electiveBadge.classList.remove('hidden');
+                    if (selectedCount === target) {
+                        this.electiveBadge.className = "text-xs font-mono px-2.5 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400";
+                        this.electiveBadge.innerText = `Electives: ${selectedCount}/${target} Credits Selected (Valid)`;
+                    } else {
+                        this.electiveBadge.className = "text-xs font-mono px-2.5 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400";
+                        this.electiveBadge.innerText = `Electives: ${selectedCount}/${target} Credits Selected`;
+                    }
+                } else {
+                    this.electiveBadge.classList.add('hidden');
+                }
+            }
+
+            triggerAutosaveNotification() {
+                this.autosaveIndicator.classList.remove('hidden');
+                localStorage.setItem(this.storageKey, JSON.stringify(this.courses));
+                setTimeout(() => this.autosaveIndicator.classList.add('hidden'), 800);
+            }
+
+            recalculateAllMetrics() {
+                let earnedCredits = 0, totalPoints = 0, totalGpaCredits = 0;
+                let yearlySums = { 1: { pts: 0, cr: 0 }, 2: { pts: 0, cr: 0 }, 3: { pts: 0, cr: 0 }, 4: { pts: 0, cr: 0 } };
+
+                this.courses.forEach(c => {
+                    if (c.type === 'Elective' && !c.selected) return;
+
+                    if (c.type !== 'Non-GPA') {
+                        const gp = GRADE_POLICY[c.grade];
+                        if (gp !== null) {
+                            const coursePoints = gp * c.credits;
+                            totalPoints += coursePoints;
+                            totalGpaCredits += c.credits;
+                            if (c.grade !== 'E') earnedCredits += c.credits;
+
+                            if (yearlySums[c.year]) {
+                                yearlySums[c.year].pts += coursePoints;
+                                yearlySums[c.year].cr += c.credits;
+                            }
+                        }
+                    }
+                });
+
+                const cgpa = totalGpaCredits > 0 ? (totalPoints / totalGpaCredits) : 0;
+                document.getElementById('metric-cgpa').innerText = cgpa.toFixed(2);
+                document.getElementById('metric-credits').innerText = `${earnedCredits} / 120`;
+
+                let rank = "Pass Standard";
+                if (cgpa >= 3.70) rank = "First Class Honours";
+                else if (cgpa >= 3.30) rank = "Second Class Upper";
+                else if (cgpa >= 3.00) rank = "Second Class Lower";
+                if (totalGpaCredits === 0) rank = "Awaiting Ledger Input";
+                document.getElementById('metric-classification').innerText = rank;
+
+                const pct = Math.min(100, Math.round((earnedCredits / 120) * 100));
+                document.getElementById('progress-text-pct').innerText = `${pct}%`;
+                document.getElementById('progress-bar-fill').style.width = `${pct}%`;
+
+                for (let y = 1; y <= 4; y++) {
+                    const yearGpa = yearlySums[y].cr > 0 ? (yearlySums[y].pts / yearlySums[y].cr) : 0;
+                    document.getElementById(`y${y}-gpa`).innerText = yearGpa.toFixed(2);
+                    const yearTargetMap = { 1: 29, 2: 32, 3: 29, 4: 30 };
+                    document.getElementById(`y${y}-cr`).innerText = `${yearlySums[y].cr} / ${yearTargetMap[y]}`;
+                }
+
+                this.runPredictiveSimulation();
+                this.updateVelocityChart();
+            }
+
+            setTargetPreset(val) {
+                this.sliderTargetGpa.value = val.toFixed(2);
+                this.sliderTargetVal.innerText = val.toFixed(2);
+                this.runPredictiveSimulation();
+            }
+
+            runPredictiveSimulation() {
+                let currentPoints = 0, currentGpaCredits = 0, totalConfiguredGpaCredits = 0;
+
+                this.courses.forEach(c => {
+                    if (c.type === 'Elective' && !c.selected) return;
+                    if (c.type !== 'Non-GPA') {
+                        totalConfiguredGpaCredits += c.credits;
+                        const gp = GRADE_POLICY[c.grade];
+                        if (gp !== null) {
+                            currentPoints += (gp * c.credits);
+                            currentGpaCredits += c.credits;
+                        }
+                    }
+                });
+
+                const targetGradGpa = parseFloat(this.sliderTargetGpa.value);
+                const totalTargetCredits = Math.max(120, totalConfiguredGpaCredits);
+                const remainingCredits = totalTargetCredits - currentGpaCredits;
+
+                document.getElementById('calc-remaining-credits').innerText = remainingCredits;
+
+                const reqGpaContainer = document.getElementById('calc-required-gpa');
+                const badge = document.getElementById('calc-status-badge');
+
+                if (remainingCredits <= 0) {
+                    reqGpaContainer.innerText = "0.00";
+                    badge.className = "text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                    badge.innerText = "Completed";
+                    return;
+                }
+
+                const neededPoints = (targetGradGpa * totalTargetCredits) - currentPoints;
+                const requiredAverage = neededPoints / remainingCredits;
+
+                if (requiredAverage > 4.00) {
+                    reqGpaContainer.innerText = requiredAverage.toFixed(2);
+                    badge.className = "text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold bg-red-500/10 text-red-400 border border-red-500/20";
+                    badge.innerText = "Impossible";
+                } else if (requiredAverage <= 2.00) {
+                    reqGpaContainer.innerText = Math.max(2.00, requiredAverage).toFixed(2);
+                    badge.className = "text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                    badge.innerText = "Safe Zone";
+                } else if (requiredAverage > 3.60) {
+                    reqGpaContainer.innerText = requiredAverage.toFixed(2);
+                    badge.className = "text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20";
+                    badge.innerText = "Critical / High A's";
+                } else {
+                    reqGpaContainer.innerText = requiredAverage.toFixed(2);
+                    badge.className = "text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold bg-dsNeonBlue/10 text-dsNeonBlue border border-dsNeonBlue/20";
+                    badge.innerText = "Achievable";
+                }
+            }
+
+            renderGrid() {
+                const filterYear = document.getElementById('filter-academic-year').value;
+                const filterSem = document.getElementById('filter-semester').value;
+                this.ledgerContainer.innerHTML = '';
+
+                const filtered = this.courses.filter(c => {
+                    const matchYear = (filterYear === 'ALL' || c.year.toString() === filterYear);
+                    const matchSem = (filterSem === 'ALL' || c.semester.toString() === filterSem);
+                    return matchYear && matchSem;
+                }).sort((a, b) => a.semester !== b.semester ? a.semester - b.semester : a.code.localeCompare(b.code));
+
+                filtered.forEach(c => {
+                    const tr = document.createElement('tr');
+                    const isUnselectedElective = (c.type === 'Elective' && !c.selected);
+
+                    tr.className = `${isUnselectedElective ? 'opacity-35 bg-slate-900/30' : 'hover:bg-darkBase/40'} border-b border-darkBorder/40 transition-all duration-150`;
+
+                    let BadgeMarkup = '';
+                    if (c.type === 'Elective') {
+                        BadgeMarkup = `
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" ${c.selected ? 'checked' : ''} onchange="app.toggleElectiveComponent('${c.id}', this.checked)" class="rounded bg-darkBase border-darkBorder text-dsNeonCyan focus:ring-0 w-3.5 h-3.5 cursor-pointer">
+                                <span class="text-[10px] font-bold text-dsNeonCyan tracking-wider uppercase">Elective</span>
+                            </label>`;
+                    } else if (c.type === 'Non-GPA') {
+                        BadgeMarkup = `<span class="text-[9px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono tracking-wider uppercase">Non-GPA</span>`;
+                    } else {
+                        BadgeMarkup = `<span class="text-[9px] font-bold px-2 py-0.5 rounded bg-dsPurple/10 text-purple-400 border border-dsPurple/20 font-mono tracking-wider uppercase">Compulsory</span>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td class="p-3.5">${BadgeMarkup}</td>
+                        <td class="p-3.5 font-mono font-bold ${isUnselectedElective ? 'line-through text-dsTextMuted' : 'text-slate-200'}">${c.code}</td>
+                        <td class="p-3.5 truncate max-w-xs ${isUnselectedElective ? 'text-dsTextMuted' : 'text-slate-300'}" title="${c.title}">${c.title}</td>
+                        <td class="p-3.5 text-center font-mono text-xs text-dsTextMuted">Year ${c.year} • S${c.semester}</td>
+                        <td class="p-3.5 text-center font-mono font-semibold text-slate-300">${c.credits}</td>
+                        <td class="p-3.5 text-center">
+                            <select onchange="app.updateGrade('${c.id}', this.value)" ${isUnselectedElective ? 'disabled' : ''} class="bg-darkBase border border-darkBorder rounded text-xs px-2 py-1 text-slate-200 focus:border-dsNeonBlue outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+                                ${Object.keys(GRADE_POLICY).map(g => `<option value="${g}" ${c.grade === g ? 'selected' : ''}>${g === 'IP' ? 'In Progress' : g}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="p-3.5 text-center flex justify-center gap-3.5 text-sm">
+                            <button onclick="app.edit('${c.id}')" class="text-dsTextMuted hover:text-dsNeonCyan transition-colors" title="Modify Context">✎</button>
+                            <button onclick="app.del('${c.id}')" class="text-dsTextMuted hover:text-red-400 transition-colors" title="Drop Module">🗑</button>
+                        </td>`;
+                    this.ledgerContainer.appendChild(tr);
+                });
+                this.validateElectiveQuotas();
+            }
+
+            toggleElectiveComponent(id, isChecked) {
+                const idx = this.courses.findIndex(c => c.id === id);
+                if (idx > -1) {
+                    this.courses[idx].selected = isChecked;
+                    this.triggerAutosaveNotification();
+                    this.recalculateAllMetrics();
+                    this.renderGrid();
+                }
+            }
+
+            updateGrade(id, val) {
+                const idx = this.courses.findIndex(c => c.id === id);
+                if (idx > -1) {
+                    this.courses[idx].grade = val;
+                    this.triggerAutosaveNotification();
+                    this.recalculateAllMetrics();
+                }
+            }
+
+            edit(id) {
+                const t = this.courses.find(c => c.id === id); if (!t) return;
+                document.getElementById('form-course-id').value = t.id;
+                document.getElementById('form-code').value = t.code;
+                document.getElementById('form-title').value = t.title;
+                document.getElementById('form-semester').value = t.semester;
+                document.getElementById('form-credits').value = t.credits;
+                document.getElementById('form-type').value = t.type;
+                document.getElementById('form-grade').value = t.grade;
+                this.modal.classList.remove('hidden');
+            }
+
+            del(id) {
+                if (confirm("Drop this course entry from the ledger matrices?")) {
+                    this.courses = this.courses.filter(c => c.id !== id);
+                    this.triggerAutosaveNotification();
+                    this.renderGrid();
+                    this.recalculateAllMetrics();
+                }
+            }
+
+            openAddModal() { document.getElementById('form-course-id').value = ''; this.form.reset(); this.modal.classList.remove('hidden'); }
+            closeModal() { this.modal.classList.add('hidden'); }
+
+            handleFormSubmit(e) {
+                e.preventDefault();
+                const sem = parseInt(document.getElementById('form-semester').value);
+                const d = {
+                    id: document.getElementById('form-course-id').value || 'ds-' + Date.now(),
+                    code: document.getElementById('form-code').value.toUpperCase(),
+                    title: document.getElementById('form-title').value,
+                    semester: sem,
+                    year: Math.ceil(sem / 2),
+                    credits: parseInt(document.getElementById('form-credits').value),
+                    type: document.getElementById('form-type').value,
+                    selected: true,
+                    grade: document.getElementById('form-grade').value
+                };
+                const idx = this.courses.findIndex(c => c.id === d.id);
+                if (idx > -1) this.courses[idx] = d; else this.courses.push(d);
+                this.triggerAutosaveNotification(); this.recalculateAllMetrics(); this.renderGrid(); this.closeModal();
+            }
+
+            exportData() {
+                const dataStr = JSON.stringify(this.courses, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url;
+                a.download = `BSc_DataScience_Ledger_Matrix.json`;
+                document.body.appendChild(a); a.click();
+                document.body.removeChild(a); URL.revokeObjectURL(url);
+            }
+
+            importData(event) {
+                const file = event.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        if (Array.isArray(importedData)) {
+                            this.courses = importedData;
+                            this.triggerAutosaveNotification();
+                            this.recalculateAllMetrics();
+                            this.renderGrid();
+                            alert("✅ System state restored successfully!");
+                        }
+                    } catch (err) { alert("❌ Corrupted file framework uploaded."); }
+                };
+                reader.readAsText(file);
+            }
+
+            resetToDefaults() {
+                if (confirm("Reset whole matrix registry back to default Handbook specification limits?")) {
+                    localStorage.removeItem(this.storageKey);
+                    this.courses = JSON.parse(JSON.stringify(BASELINE_CURRICULUM_DATA));
+                    this.triggerAutosaveNotification();
+                    this.recalculateAllMetrics();
+                    this.renderGrid();
+                }
+            }
+
+            initChart() {
+                const ctx = document.getElementById('velocityChart').getContext('2d');
+                this.chartInstance = new Chart(ctx, {
+                    data: this.getChartDatasetMatrix(),
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { labels: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 11 } } },
+                            tooltip: {
+                                backgroundColor: '#161e2e',
+                                titleFont: { family: 'JetBrains Mono' },
+                                bodyFont: { family: 'Inter' },
+                                borderColor: '#243242',
+                                borderWidth: 1,
+                                callbacks: {
+                                    label: function (context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) label += ': ';
+                                        if (context.raw !== null) label += parseFloat(context.raw).toFixed(2);
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: { min: 0, max: 4.0, grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono' } } },
+                            x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono' } } }
+                        }
+                    }
+                });
+            }
+
+            getChartDatasetMatrix() {
+                const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
+                let sgpaArray = [], cgpaArray = [];
+                let cumulativePoints = 0, cumulativeCredits = 0;
+
+                semesters.forEach(s => {
+                    let semPoints = 0, semCredits = 0;
+                    this.courses.forEach(c => {
+                        if (c.semester === s && (c.type !== 'Elective' || c.selected) && c.type !== 'Non-GPA') {
+                            const gp = GRADE_POLICY[c.grade];
+                            if (gp !== null) {
+                                semPoints += (gp * c.credits);
+                                semCredits += c.credits;
+                            }
+                        }
+                    });
+
+                    if (semCredits > 0) {
+                        sgpaArray.push(parseFloat((semPoints / semCredits).toFixed(2)));
+                        cumulativePoints += semPoints;
+                        cumulativeCredits += semCredits;
+                        cgpaArray.push(parseFloat((cumulativePoints / cumulativeCredits).toFixed(2)));
+                    } else {
+                        sgpaArray.push(null);
+                        cgpaArray.push(cumulativeCredits > 0 ? parseFloat((cumulativePoints / cumulativeCredits).toFixed(2)) : null);
+                    }
+                });
+
+                return {
+                    labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'],
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: 'Semester SGPA',
+                            data: sgpaArray,
+                            backgroundColor: 'rgba(0, 242, 254, 0.25)',
+                            borderColor: '#00f2fe',
+                            borderWidth: 1.5,
+                            borderRadius: 4,
+                            barPercentage: 0.55
+                        },
+                        {
+                            type: 'line',
+                            label: 'Cumulative CGPA Trend',
+                            data: cgpaArray,
+                            borderColor: '#7f5af0',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#7f5af0',
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            fill: false,
+                            tension: 0.15
+                        }
+                    ]
+                };
+            }
+
+            updateVelocityChart() {
+                if (this.chartInstance) {
+                    const freshData = this.getChartDatasetMatrix();
+                    this.chartInstance.data.datasets[0].data = freshData.datasets[0].data;
+                    this.chartInstance.data.datasets[1].data = freshData.datasets[1].data;
+                    this.chartInstance.update();
+                }
+            }
+        }
+
+        const app = new DataScienceApp();
+        window.addEventListener('DOMContentLoaded', () => app.boot());
+    </script>
+
+    <footer class="border-t border-darkBorder bg-darkSurface mt-auto no-print">
+        <div
+            class="max-w-[1700px] mx-auto px-4 lg:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+
+            <div class="text-xs text-dsTextMuted font-mono">
+                &copy; ©2026 Lochana Karunarathna. All rights reserved. <span
+                    class="hidden sm:inline text-darkBorder">|</span> <span class="text-slate-500">BScHons Data
+                    Science</span>
+            </div>
+
+            <div class="flex items-center space-x-5">
+                <a href="https://www.linkedin.com/in/lochana-karunarathna-743055363/" target="_blank"
+                    class="text-dsTextMuted hover:text-dsNeonBlue transition-colors" title="LinkedIn Profile">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                    </svg>
+                </a>
+
+                <a href="https://github.com/LochanaKa" target="_blank"
+                    class="text-dsTextMuted hover:text-white transition-colors" title="GitHub Repository">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                    </svg>
+                </a>
+                <a href="https://hashnode.com/@lochanaka" target="_blank"
+                    class="hover:text-dsNeonBlue transition-colors" title="Hashnode">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-1.127 15.155l-2.42-2.42 2.42-2.42 1.59 1.59 2.42-2.42 2.42 2.42-2.42 2.42-1.59-1.59-2.42 2.42z" />
+                    </svg>
+                </a>
+                <a href="https://www.youtube.com/@LochanaKa" target="_blank"
+                    class="hover:text-red-500 transition-colors" title="YouTube">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                    </svg>
+                </a>
+                <a href="https://www.tiktok.com/@dswithlk" target="_blank" class="hover:text-white transition-colors"
+                    title="TikTok">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.77 0 2.89 2.89 0 0 1 2.5-2.86v-3.45a6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.58a8.35 8.35 0 0 0 6.32 1.49v-3.38z" />
+                    </svg>
+                </a>
+                <a href="https://www.instagram.com/lochanakarunarathnaofficial/" target="_blank"
+                    class="hover:text-pink-500 transition-colors" title="Instagram">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 2.163c3.204 0 3.584.012 4.85.07 1.17.054 1.803.25 2.227.415.561.217.96.477 1.383.901.423.424.684.823.901 1.383.165.424.361 1.057.415 2.227.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.054 1.17-.25 1.803-.415 2.227-.217.561-.477.96-.901 1.383-.424.424-.823.684-1.383.901-.424.165-1.057.361-2.227.415-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.17-.054-1.803-.25-2.227-.415-.561-.217-.96-.477-1.383-.901-.424-.424-.684-.823-.901-1.383-.165-.424-.361-1.057-.415-2.227-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.054-1.17.25-1.803.415-2.227.217-.561.477-.96.901-1.383.424-.424.823-.684 1.383-.901.424-.165 1.057-.361 2.227-.415 1.266-.058 1.646-.07 4.85-.07zm0 1.683c-3.146 0-3.522.013-4.767.07-1.077.05-1.663.23-2.052.38-.517.2-.887.438-1.275.826-.388.388-.626.758-.826 1.275-.15.39-.33.974-.38 2.052-.057 1.245-.07 1.621-.07 4.767s.013 3.522.07 4.767c.05 1.077.23 1.663.38 2.052.2.517.438.887.826 1.275.388.388.758.626 1.275.826.39.15.974.33 2.052.38 1.245.057 1.621.07 4.767.07s3.522-.013 4.767-.07c1.077-.05 1.663-.23 2.052-.38.517-.2.887-.438 1.275-.826.388-.388.626-.758.826-1.275.15-.39.33-.974.38-2.052.057-1.245.07-1.621.07-4.767s-.013-3.522-.07-4.767c-.05-1.077-.23-1.663-.38-2.052-.2-.517-.438-.887-.826-1.275-.388-.388-.758-.626-1.275-.826-.39-.15-.974-.33-2.052-.38-1.245-.057-1.621-.07-4.767-.07zM12 6.848a5.152 5.152 0 1 0 0 10.304 5.152 5.152 0 0 0 0-10.304zm0 8.621a3.469 3.469 0 1 1 0-6.938 3.469 3.469 0 0 1 0 6.938zm5.787-8.815a1.206 1.206 0 1 0 0 2.411 1.206 1.206 0 0 0 0-2.411z" />
+                    </svg>
+                </a>
+            </div>
+    </footer>
+</body>
+
+</html>
